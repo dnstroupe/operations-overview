@@ -37,3 +37,7 @@ The review also kept the snapshot visible on phones, strengthened control outlin
 Figma now includes a request detail state, an empty state, and a review handoff frame. Metric cards expose text properties. The original overview frames remain layout studies, while the browser is the reference for current interaction behavior. The file is not a complete design system or a fully wired prototype.
 
 See [the review](AUDIT.md), [the checks](CHECKS.md), and [the session plan](TEST-PLAN.md).
+
+## A quicker leadership review
+
+The KPI cards now open their matching request lists. Summary totals stay tied to team, date, and search. The active list filter is named and can be cleared without losing those choices. The briefing calls out the oldest overdue request and upcoming high priority work. Each row shows its next step, overdue age, or completion timing. These changes are intended to reduce extra clicks; no user outcome or time savings are claimed.

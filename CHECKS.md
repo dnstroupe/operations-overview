@@ -34,3 +34,7 @@ Added keyboard accessible export help with Escape dismissal, an expandable dashb
 Verified export help appears on keyboard focus and dismisses with Escape. The guide opens with Enter. Modal Tab containment and Escape focus return passed again. Data tests and JavaScript syntax checks passed. Hover behavior, screen reader output, system contrast, and full conformance still need systematic manual testing.
 
 The standing baseline is in ACCESSIBILITY-STANDARD.md.
+
+## KPI navigation checks
+
+Open, overdue, due within seven days, and completed cards showed 8, 3, 2, and 4 rows respectively. Summary values stayed unchanged. Enter and Space activated the cards, moving focus to the request heading. People plus Due in 7 days showed one request. Clearing the list filter and resetting all filters restored their intended scopes. Added automated checks for seven day boundaries and completed records.

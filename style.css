@@ -46,3 +46,19 @@ main:focus{outline:none}
 nav a{min-height:44px;align-items:center}
 @media(max-width:700px){.dialog-top{top:-22px}.requests-table td[data-label]:before{font-size:12px}.story{overflow-wrap:anywhere}.tabs button{min-width:44px}}
 @media(forced-colors:active){button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid Highlight;box-shadow:none}.tooltip{background:Canvas;color:CanvasText;border:1px solid CanvasText}.title-button{border:1px solid ButtonText}.tabs button[aria-pressed=true]{border:2px solid Highlight}}
+
+/* Summary cards lead directly to the work behind each number. */
+button.metric{text-align:left;color:var(--ink);cursor:pointer;border:1px solid #6a7d73;white-space:normal;display:block;width:100%;font-weight:400}
+button.metric:hover{background:#e9f0e6;filter:none;border-color:#24634e}
+button.metric[aria-pressed=true]{border:3px solid #24634e;padding:18px;background:#e9f0e6}
+.metric-action{display:block;margin-top:14px;font-size:13px;font-weight:600;color:#24634e;text-decoration:underline;text-underline-offset:3px}
+.briefing{flex:1;min-width:0}.briefing p+p{margin-top:8px;font-size:13px;color:#304b3c}
+.list-filter{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--muted)}
+.list-filter p{flex:1;min-width:180px}
+.next-step{min-width:140px;max-width:260px;line-height:1.6}
+#requests-heading:focus{outline:3px solid #075a9c;outline-offset:5px}
+@media(max-width:1100px){button.metric[aria-pressed=true]{padding:14px}.requests-table td,.requests-table th{padding:12px 8px}}
+@media(max-width:700px){.requests-table td.next-step{grid-column:1/-1;max-width:none}.briefing{flex-basis:80%}.metric-action{font-size:12px}.requests-table td{padding:0}}
+@media(forced-colors:active){button.metric[aria-pressed=true]{border:3px solid Highlight}.metric-action{color:LinkText}}
+
+button.metric{display:flex;flex-direction:column;align-items:flex-start}.metric-action{margin-top:auto;padding-top:14px}.metric small{margin-bottom:4px}.metrics{margin-top:10px}

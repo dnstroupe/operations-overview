@@ -13,26 +13,34 @@ function render() {
   const dateScope = $('window').value === 'all' ? 'All due dates' : 'Due in the next ' + $('window').value + ' days, including today';
   $('scope').textContent = `${base.length} requests · ${$('team').value === 'all' ? 'All teams' : $('team').value} · ${dateScope}. Summary and charts follow these filters.`;
   const cards = [
-    ['Open requests', summary.open, 'Not yet complete', ''],
-    ['Overdue', summary.overdue, 'Open and past the due date', 'alert'],
-    ['Due in 7 days', summary.due, 'Open · today through Nov 18', ''],
-    ['Completed on time', summary.onTime === null ? '—' : summary.onTime + '%', summary.closed ? `Of ${summary.closed} completed requests` : 'No completed requests', '']
+    ['Open requests', summary.open, 'Not yet complete', '', 'open'],
+    ['Overdue', summary.overdue, 'Open and past the due date', 'alert', 'overdue'],
+    ['Due in 7 days', summary.due, 'Open · today through Nov 18', '', 'due'],
+    ['Completed on time', summary.onTime === null ? '—' : summary.onTime + '%', summary.closed ? `Of ${summary.closed} completed requests` : 'No completed requests', '', 'complete']
   ];
-  $('metrics').innerHTML = cards.map(([label,value,hint,cls]) => `<div class="metric ${cls}"><span class="metric-label">${label}</span><strong>${value}</strong><small>${hint}</small></div>`).join('');
+  $('metrics').innerHTML = cards.map(([label,value,hint,cls,filter]) => `<button type="button" class="metric ${cls}" data-kpi="${filter}" aria-pressed="${statusFilter === filter}" aria-controls="rows" aria-label="${label}: ${value}. ${hint}. Show ${filter === 'complete' ? 'all completed requests' : filter === 'due' ? 'requests due within seven days' : filter === 'open' ? 'open requests' : 'overdue requests'}"><span class="metric-label">${label}</span><strong>${value}</strong><small>${hint}</small><span class="metric-action">${statusFilter === filter ? 'Selected' : filter === 'complete' ? 'Review completed requests' : 'View requests'} →</span></button>`).join('');
   $('insight-text').textContent = !base.length ? 'No requests match these filters. Clear your search or choose a wider view.' : summary.overdue
     ? `${summary.overdue} overdue ${summary.overdue === 1 ? 'request needs' : 'requests need'} a closer look. Start with the owner and the next step.`
     : 'No overdue requests in this view. Check All dates if you have selected an upcoming date range.';
+  const late = sortRequests(base.filter(overdue));
+  const highSoon = base.filter(t => !t.completed && t.priority === 'High' && daysUntil(t) >= 0 && daysUntil(t) <= 7);
+  $('briefing-detail').textContent = late.length ? `Oldest overdue: ${late[0].title} · ${late[0].owner} · ${-daysUntil(late[0])} ${daysUntil(late[0]) === -1 ? 'day' : 'days'} late. ${highSoon.length} high priority ${highSoon.length === 1 ? 'request is' : 'requests are'} due within 7 days in this view.` : base.length ? `${highSoon.length} high priority ${highSoon.length === 1 ? 'request is' : 'requests are'} due within 7 days in this view.` : '';
   $('show-overdue').disabled = !summary.overdue;
   renderCharts(base);
   currentRows = sortRequests(filterRequests(base, {status:statusFilter}), $('sort').value);
+  const filterNames = {all:'All requests',open:'Open requests',overdue:'Overdue requests',due:'Due in 7 days',complete:'Completed requests'};
+  $('requests-heading').textContent = filterNames[statusFilter];
+  $('active-filter').textContent = statusFilter === 'all' ? 'No additional list filter. Team, date, and search still apply.' : `Showing: ${filterNames[statusFilter]}. Summary totals and charts still describe the broader view.`;
+  $('clear-list').hidden = statusFilter === 'all';
   $('result-count').textContent = `${currentRows.length} ${currentRows.length === 1 ? 'request' : 'requests'} shown · Status buttons filter this list only`;
   $('rows').innerHTML = currentRows.map(task => `
     <tr role="row">
       <td role="cell"><span class="id">${escapeHtml(task.id)}</span><button class="title-button" aria-haspopup="dialog" aria-describedby="request-help" data-id="${escapeHtml(task.id)}">${escapeHtml(task.title)}</button></td>
       <td role="cell" data-label="Team / owner">${escapeHtml(task.team)}<br><span class="muted">${escapeHtml(task.owner)}</span></td>
       <td role="cell" data-label="Status"><span class="badge ${overdue(task) ? 'overdue' : task.completed ? 'complete' : ''}">${escapeHtml(overdue(task) ? 'Overdue' : task.status)}</span>${overdue(task) ? `<span class="work-status">${escapeHtml(task.status)}</span>` : ''}</td>
-      <td role="cell" data-label="Due" class="${overdue(task) ? 'late' : ''}">${fmt(task.due)}</td>
+      <td role="cell" data-label="Due" class="${overdue(task) ? 'late' : ''}">${fmt(task.due)}${overdue(task) ? `<span class="work-status late">${-daysUntil(task)} ${daysUntil(task) === -1 ? 'day' : 'days'} late</span>` : task.completed ? `<span class="work-status">${scheduleState(task)}</span>` : ''}</td>
       <td role="cell" data-label="Priority"><span class="priority">${escapeHtml(task.priority)}</span></td>
+      <td role="cell" data-label="Next step" class="next-step">${escapeHtml(task.next)}</td>
     </tr>`).join('');
   $('empty').hidden = currentRows.length > 0;
   $('export').disabled = !currentRows.length;
@@ -81,9 +89,22 @@ $('filters').addEventListener('reset', () => {
   setTimeout(render, 0);
 });
 $('sort').addEventListener('change', render);
-document.querySelectorAll('[data-status]').forEach(button => button.addEventListener('click', () => {
-  statusFilter = button.dataset.status;
+function selectList(filter, moveToList = false) {
+  clearTimeout(searchTimer);
+  statusFilter = filter;
   render();
+  if (moveToList) {
+    $('requests-heading').focus({preventScroll:true});
+    $('requests').scrollIntoView({behavior:'instant',block:'start'});
+  }
+}
+$('metrics').addEventListener('click', event => {
+  const card = event.target.closest('[data-kpi]');
+  if (card) selectList(card.dataset.kpi, true);
+});
+$('clear-list').addEventListener('click', () => selectList('all', true));
+document.querySelectorAll('[data-status]').forEach(button => button.addEventListener('click', () => {
+  selectList(button.dataset.status);
 }));
 $('empty-reset').addEventListener('click', () => { $('filters').reset(); $('search').focus(); });
 $('show-overdue').addEventListener('click', () => {

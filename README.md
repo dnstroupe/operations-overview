@@ -52,3 +52,7 @@ The default view now puts unresolved work first. Overdue requests keep their wor
 * [Review accessibility and remaining checks](https://dnstroupe.github.io/operations-overview/accessibility.html)
 
 The Figma file also includes detail and empty states, review notes, and editable metric properties. It is a design study with a working browser counterpart, not a complete enterprise design system.
+
+## A quicker leadership review
+
+The KPI cards now open their matching request lists. Summary totals stay tied to team, date, and search. The active list filter is named and can be cleared without losing those choices. The briefing calls out the oldest overdue request and upcoming high priority work. Each row shows its next step, overdue age, or completion timing. These changes are intended to reduce extra clicks; no user outcome or time savings are claimed.

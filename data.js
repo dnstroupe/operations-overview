@@ -26,7 +26,7 @@ function filterRequests(rows, {team='all', window='all', query='', status='all'}
     (team === 'all' || t.team === team) &&
     (window === 'all' || (daysUntil(t) >= 0 && daysUntil(t) <= Number(window))) &&
     (!term || [t.title, t.owner, t.id].some(value => value.toLowerCase().includes(term))) &&
-    (status === 'all' || (status === 'overdue' ? overdue(t) : status === 'complete' ? !!t.completed : !t.completed))
+    (status === 'all' || (status === 'overdue' ? overdue(t) : status === 'complete' ? !!t.completed : status === 'due' ? !t.completed && daysUntil(t) >= 0 && daysUntil(t) <= 7 : status === 'open' ? !t.completed : false))
   );
 }
 function sortRequests(rows, sort='attention') {
