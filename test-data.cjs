@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict');
+const {TASKS,summarize,overdue,daysUntil}=require('./data.js');
+assert.deepEqual(summarize(TASKS),{open:8,overdue:3,due:2,onTime:75,closed:4});
+assert.equal(TASKS.filter(overdue).length,3);
+assert.equal(overdue(TASKS.find(t=>t.id==='OP-110')),false,'Completed late work must not remain overdue');
+assert.equal(summarize([]).onTime,null,'No completed records must not show 0%');
+const next30=TASKS.filter(t=>daysUntil(t)>=0&&daysUntil(t)<=30);
+assert.equal(next30.length,3);assert.equal(summarize(next30).overdue,0);
+assert.equal(summarize(TASKS.filter(t=>t.team==='People')).onTime,100);
+assert.equal(new Set(TASKS.map(t=>t.id)).size,TASKS.length);
+console.log('Passed: totals, overdue rules, empty denominator, date range, team slice, and unique IDs.');
