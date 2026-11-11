@@ -27,12 +27,12 @@ function render() {
   currentRows = sortRequests(filterRequests(base, {status:statusFilter}), $('sort').value);
   $('result-count').textContent = `${currentRows.length} ${currentRows.length === 1 ? 'request' : 'requests'} shown · Status buttons filter this list only`;
   $('rows').innerHTML = currentRows.map(task => `
-    <tr>
-      <td><span class="id">${escapeHtml(task.id)}</span><button class="title-button" data-id="${escapeHtml(task.id)}">${escapeHtml(task.title)}</button></td>
-      <td data-label="Team / owner">${escapeHtml(task.team)}<br><span class="muted">${escapeHtml(task.owner)}</span></td>
-      <td data-label="Status"><span class="badge ${overdue(task) ? 'overdue' : task.completed ? 'complete' : ''}">${escapeHtml(overdue(task) ? 'Overdue' : task.status)}</span>${overdue(task) ? `<span class="work-status">${escapeHtml(task.status)}</span>` : ''}</td>
-      <td data-label="Due" class="${overdue(task) ? 'late' : ''}">${fmt(task.due)}</td>
-      <td data-label="Priority"><span class="priority">${escapeHtml(task.priority)}</span></td>
+    <tr role="row">
+      <td role="cell"><span class="id">${escapeHtml(task.id)}</span><button class="title-button" aria-haspopup="dialog" aria-describedby="request-help" data-id="${escapeHtml(task.id)}">${escapeHtml(task.title)}</button></td>
+      <td role="cell" data-label="Team / owner">${escapeHtml(task.team)}<br><span class="muted">${escapeHtml(task.owner)}</span></td>
+      <td role="cell" data-label="Status"><span class="badge ${overdue(task) ? 'overdue' : task.completed ? 'complete' : ''}">${escapeHtml(overdue(task) ? 'Overdue' : task.status)}</span>${overdue(task) ? `<span class="work-status">${escapeHtml(task.status)}</span>` : ''}</td>
+      <td role="cell" data-label="Due" class="${overdue(task) ? 'late' : ''}">${fmt(task.due)}</td>
+      <td role="cell" data-label="Priority"><span class="priority">${escapeHtml(task.priority)}</span></td>
     </tr>`).join('');
   $('empty').hidden = currentRows.length > 0;
   $('export').disabled = !currentRows.length;
@@ -66,12 +66,15 @@ function openRequest(button) {
     <h3>Next step</h3><p>${escapeHtml(task.next)}</p>
     <p class="muted small">This is a read only demo. It does not update a real request or notify anyone.</p>`;
   $('detail').showModal();
+  $('close-detail').focus();
 }
 
 $('filters').addEventListener('submit', event => event.preventDefault());
-$('filters').addEventListener('input', render);
-$('filters').addEventListener('change', render);
+let searchTimer;
+$('filters').addEventListener('input', event => { if (event.target.id === 'search') { clearTimeout(searchTimer); searchTimer = setTimeout(render, 250); } });
+$('filters').addEventListener('change', () => { clearTimeout(searchTimer); render(); });
 $('filters').addEventListener('reset', () => {
+  clearTimeout(searchTimer);
   statusFilter = 'all';
   $('sort').value = 'attention';
   // Native controls receive their default values after the reset event.
@@ -94,7 +97,7 @@ $('rows').addEventListener('click', event => {
   if (button) openRequest(button);
 });
 $('close-detail').addEventListener('click', () => $('detail').close());
-$('detail').addEventListener('close', () => lastTrigger?.focus());
+$('detail').addEventListener('close', () => { if (lastTrigger?.isConnected) lastTrigger.focus(); else document.querySelector('[data-status="all"]').focus(); });
 $('detail').addEventListener('keydown', event => {
   if (event.key !== 'Tab') return;
   const controls = [...$('detail').querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')];
@@ -109,6 +112,18 @@ $('export').addEventListener('click', () => {
   link.download = 'fictional-operations-requests.csv';
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  $('notice').textContent = `Exported ${currentRows.length} fictional requests, including work status and schedule.`;
+  $('notice').textContent = `Download requested for ${currentRows.length} fictional requests, including work status and schedule.`;
 });
 render();
+
+// Supplemental help opens on hover or focus and can be dismissed with Escape.
+const helpWrap = document.querySelector('.help-wrap');
+const exportHelp = $('export-help');
+let helpDismissed = false;
+function showHelp() { if (!helpDismissed && !$('export').disabled) exportHelp.hidden = false; }
+function hideHelp() { exportHelp.hidden = true; }
+helpWrap.addEventListener('pointerenter', showHelp);
+helpWrap.addEventListener('pointerleave', () => { if (!helpWrap.contains(document.activeElement)) { hideHelp(); helpDismissed = false; } });
+helpWrap.addEventListener('focusin', showHelp);
+helpWrap.addEventListener('focusout', event => { if (!helpWrap.contains(event.relatedTarget)) { hideHelp(); helpDismissed = false; } });
+document.addEventListener('keydown', event => { if (event.key === 'Escape' && !exportHelp.hidden) { hideHelp(); helpDismissed = true; } });

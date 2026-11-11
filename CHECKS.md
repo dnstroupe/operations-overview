@@ -26,3 +26,11 @@ Checked November 11, 2026. These are selected implementation checks, not a compl
 * Performance under real network conditions and larger datasets. No Lighthouse or enterprise scale score is claimed.
 
 The dashboard has no production backend. It cannot edit requests, notify people, enforce permissions, or display live operational data. All demo records are fictional.
+
+## Accessibility implementation update
+
+Added keyboard accessible export help with Escape dismissal, an expandable dashboard guide, programmatically associated filter and sort instructions, explicit table roles for the responsive layout, stronger focus styling, hover feedback, and a scrollable dialog. Search announcements wait briefly while typing to reduce repeated updates. Export feedback now says a download was requested rather than claiming the file was received.
+
+Verified export help appears on keyboard focus and dismisses with Escape. The guide opens with Enter. Modal Tab containment and Escape focus return passed again. Data tests and JavaScript syntax checks passed. Hover behavior, screen reader output, system contrast, and full conformance still need systematic manual testing.
+
+The standing baseline is in ACCESSIBILITY-STANDARD.md.
