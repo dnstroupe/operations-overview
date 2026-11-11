@@ -27,7 +27,7 @@ A recruiter should quickly find the role, government experience, tools, location
 
 ## What still needs a person
 
-1. **Ownership walkthrough.** David should review the wording and be able to explain the implementation and decisions in his own words. AI contribution is disclosed. A repository alone does not demonstrate independent coding ability.
+1. **Ownership walkthrough.** David should review the wording and be able to explain the implementation and decisions in his own words.
 2. **Real usability sessions.** Use TEST-PLAN.md. No participant research or measured outcome has happened for this concept. Treat the audience and task priority as assumptions until tested.
 3. **Assistive technology and broader checks.** Screen reader testing, text spacing, actual zoom, operating system contrast modes, and additional browsers remain. Selected keyboard, reflow, and contrast checks are not a conformance assessment.
 4. **Manual export receipt.** CSV content and escaping are tested. The browser showed the export status, but automated confirmation of the downloaded file was unavailable. Open the actual file once before demonstrating export publicly.

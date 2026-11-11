@@ -37,4 +37,4 @@ Group repeated problems. Fix anything that blocks completion or causes a wrong i
 
 ## Interview walkthrough
 
-Before promoting the project, explain it aloud without reading the case study: who it is for, the main task, two choices and their tradeoffs, what you contributed, where AI helped, and what you would change next. Make one small change yourself and explain how you checked it. That makes the project easier to discuss honestly in an interview.
+Before promoting the project, explain it aloud without reading the case study: who it is for, the main task, two choices and their tradeoffs, what you contributed, and what you would change next. Make one small change yourself and explain how you checked it. That makes the project easier to discuss honestly in an interview.

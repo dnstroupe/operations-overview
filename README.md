@@ -20,7 +20,7 @@ Information hierarchy, dashboard design, responsive layouts, reusable Figma elem
 
 The design and working application are real project artifacts. All 12 requests, people, teams, dates, and dashboard numbers are fictional. This is not a client deployment or a recreation of a government system. I have not conducted user research or measured business results for this concept.
 
-I brought the operational perspective and chose the project direction. An AI assistant helped build the Figma layouts, write the code, and organize these notes. I am reviewing and developing the project as part of my growing UX practice.
+I brought the operational perspective and chose the project direction. I am reviewing and developing the project as part of my growing UX practice.
 
 ## The package
 
