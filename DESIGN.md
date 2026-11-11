@@ -27,3 +27,13 @@ Team, date, and search filters affect the whole dashboard. Status buttons affect
 Ask someone to find an overdue request and explain what should happen next. Then ask them to find work due within 30 days for one team. Watch for confusion about the filters and whether they notice the next step. Repeat on a phone.
 
 These sessions have not happened yet. I would keep the observations, make changes, and show the differences here rather than claim the first version solved everything.
+
+## What changed in the technical review
+
+The initial version sorted by due date and showed old completed items before unresolved work. The current version defaults to Needs attention. Another change keeps the original work status visible alongside Overdue. An overdue item can still be waiting on information; those are different facts.
+
+The review also kept the snapshot visible on phones, strengthened control outlines and keyboard focus, documented the partial completion week, and added a proper empty result message. These changes came from guideline inspection and implementation checks, not participant research. `before-review.png` preserves the earlier screen.
+
+Figma now includes a request detail state, an empty state, and a review handoff frame. Metric cards expose text properties. The original overview frames remain layout studies, while the browser is the reference for current interaction behavior. The file is not a complete design system or a fully wired prototype.
+
+See [the review](AUDIT.md), [the checks](CHECKS.md), and [the session plan](TEST-PLAN.md).

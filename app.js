@@ -1,19 +1,114 @@
-const $=id=>document.getElementById(id);
-let statusFilter='all',lastTrigger=null,currentRows=[];
-const fmt=d=>new Date(d+'T00:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
-function baseRows(){let team=$('team').value,window=$('window').value,q=$('search').value.trim().toLowerCase();return TASKS.filter(t=>(team==='all'||t.team===team)&&(window==='all'||(daysUntil(t)>=0&&daysUntil(t)<=Number(window)))&&(!q||[t.title,t.owner,t.id].some(x=>x.toLowerCase().includes(q))));}
-function badge(t){return overdue(t)?'Overdue':t.status;}
-function render(){const base=baseRows(),s=summarize(base);$('scope').textContent=`${base.length} requests · ${$('team').value==='all'?'All teams':$('team').value} · ${$('window').value==='all'?'All due dates':'Due in the next '+$('window').value+' days, including today'}. Summary and charts follow these filters.`;
-const cards=[['Open requests',s.open,'Not yet complete',''],['Overdue',s.overdue,'Open and past the due date','alert'],['Due in 7 days',s.due,'Open · today through Nov 18',''],['Completed on time',s.onTime===null?'—':s.onTime+'%',s.closed?`Of ${s.closed} completed requests`:'No completed requests','']];
-$('metrics').innerHTML=cards.map(([label,value,hint,cls])=>`<div class="metric ${cls}"><label>${label}</label><strong>${value}</strong><small>${hint}</small></div>`).join('');
-$('insight-text').textContent=s.overdue?`${s.overdue} overdue ${s.overdue===1?'request needs':'requests need'} a closer look. Start with the owner and the next step.`:'No overdue requests in this view. Check upcoming dates to keep things moving.';$('show-overdue').disabled=!s.overdue;
-const teams=['People','Service','Facilities'],counts=teams.map(team=>base.filter(t=>t.team===team&&!t.completed).length),max=Math.max(...counts,1);
-$('workload').innerHTML=teams.map((team,i)=>`<div class="workload-row"><span>${team}</span><div class="track" aria-hidden="true"><span style="width:${counts[i]/max*100}%"></span></div><strong>${counts[i]}</strong></div>`).join('');
-const weeks=['2026-10-05','2026-10-12','2026-10-19','2026-10-26','2026-11-02','2026-11-09'];const totals=weeks.map(w=>base.filter(t=>t.completed&&day(t.completed)>=day(w)&&day(t.completed)<day(w)+7*86400000&&day(t.completed)<=day(SNAPSHOT)).length);let peak=Math.max(...totals,1);
-$('trend').innerHTML=weeks.map((w,i)=>`<div class="week"><b>${totals[i]}</b><span class="bar" aria-hidden="true" style="height:${totals[i]/peak*95}px"></span><span>${fmt(w)}</span></div>`).join('');$('trend-table').querySelector('tbody').innerHTML=weeks.map((w,i)=>`<tr><th scope="row">${fmt(w)}</th><td>${totals[i]}</td></tr>`).join('');
-currentRows=base.filter(t=>statusFilter==='all'||(statusFilter==='overdue'?overdue(t):statusFilter==='complete'?!!t.completed:!t.completed));const priority={High:0,Medium:1,Low:2};currentRows.sort((a,b)=>$('sort').value==='priority'?priority[a.priority]-priority[b.priority]||a.due.localeCompare(b.due):a.due.localeCompare(b.due));
-$('result-count').textContent=`${currentRows.length} ${currentRows.length===1?'request':'requests'} shown · Status tabs filter this list only`;
-$('rows').innerHTML=currentRows.map(t=>`<tr><td><span class="id">${t.id}</span><button class="title-button" data-id="${t.id}">${t.title}</button></td><td data-label="Team">${t.team}<br><span class="muted">${t.owner}</span></td><td data-label="Status"><span class="badge ${overdue(t)?'overdue':t.completed?'complete':''}">${badge(t)}</span></td><td data-label="Due" class="${overdue(t)?'late':''}">${fmt(t.due)}${t.due.startsWith('2027')?' 2027':''}</td><td data-label="Priority"><span class="priority">${t.priority}</span></td></tr>`).join('');$('empty').hidden=currentRows.length>0;$('export').disabled=!currentRows.length;document.querySelectorAll('[data-status]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.status===statusFilter)));}
-$('filters').addEventListener('submit',e=>e.preventDefault());$('filters').addEventListener('input',render);$('filters').addEventListener('change',render);$('filters').addEventListener('reset',()=>{statusFilter='all';setTimeout(render,0);});$('sort').addEventListener('change',render);document.querySelectorAll('[data-status]').forEach(b=>b.addEventListener('click',()=>{statusFilter=b.dataset.status;render();}));$('empty-reset').addEventListener('click',()=>{$('filters').reset();$('search').focus();});$('show-overdue').addEventListener('click',()=>{statusFilter='overdue';render();$('requests').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});document.querySelector('[data-status="overdue"]').focus({preventScroll:true});});
-$('rows').addEventListener('click',e=>{const btn=e.target.closest('[data-id]');if(!btn)return;const t=TASKS.find(x=>x.id===btn.dataset.id);lastTrigger=btn;$('detail-body').innerHTML=`<span class="id">${t.id} · FICTIONAL REQUEST</span><h2 id="detail-title">${t.title}</h2><dl><dt>Owner</dt><dd>${t.owner}</dd><dt>Team</dt><dd>${t.team}</dd><dt>Work status</dt><dd>${t.status}</dd><dt>Due date</dt><dd>${fmt(t.due)}${t.due.startsWith('2027')?' 2027':''}${overdue(t)?' · Overdue':''}</dd><dt>Priority</dt><dd>${t.priority}</dd></dl><h3>Where things stand</h3><p>${t.note}</p><h3>Next step</h3><p>${t.next}</p><p class="muted small">This is a read only demo. It does not update a real request or notify anyone.</p>`;$('detail').showModal();});$('close-detail').addEventListener('click',()=>$('detail').close());$('detail').addEventListener('close',()=>lastTrigger?.focus());
-$('export').addEventListener('click',()=>{const fields=['id','title','team','owner','status','priority','due','completed'];const csv=[fields.join(','),...currentRows.map(t=>fields.map(k=>'"'+String(t[k]??'').replaceAll('"','""')+'"').join(','))].join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='fictional-operations-requests.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('notice').textContent=`Exported ${currentRows.length} fictional requests.`;});render();
+const $ = id => document.getElementById(id);
+let statusFilter = 'all';
+let lastTrigger = null;
+let currentRows = [];
+const fmt = date => new Date(date + 'T00:00:00Z').toLocaleDateString('en-US', {
+  month: 'short', day: 'numeric', ...(date.slice(0,4) !== SNAPSHOT.slice(0,4) ? {year:'numeric'} : {}), timeZone: 'UTC'
+});
+const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+
+function render() {
+  const base = filterRequests(TASKS, {team:$('team').value, window:$('window').value, query:$('search').value});
+  const summary = summarize(base);
+  const dateScope = $('window').value === 'all' ? 'All due dates' : 'Due in the next ' + $('window').value + ' days, including today';
+  $('scope').textContent = `${base.length} requests · ${$('team').value === 'all' ? 'All teams' : $('team').value} · ${dateScope}. Summary and charts follow these filters.`;
+  const cards = [
+    ['Open requests', summary.open, 'Not yet complete', ''],
+    ['Overdue', summary.overdue, 'Open and past the due date', 'alert'],
+    ['Due in 7 days', summary.due, 'Open · today through Nov 18', ''],
+    ['Completed on time', summary.onTime === null ? '—' : summary.onTime + '%', summary.closed ? `Of ${summary.closed} completed requests` : 'No completed requests', '']
+  ];
+  $('metrics').innerHTML = cards.map(([label,value,hint,cls]) => `<div class="metric ${cls}"><span class="metric-label">${label}</span><strong>${value}</strong><small>${hint}</small></div>`).join('');
+  $('insight-text').textContent = !base.length ? 'No requests match these filters. Clear your search or choose a wider view.' : summary.overdue
+    ? `${summary.overdue} overdue ${summary.overdue === 1 ? 'request needs' : 'requests need'} a closer look. Start with the owner and the next step.`
+    : 'No overdue requests in this view. Check All dates if you have selected an upcoming date range.';
+  $('show-overdue').disabled = !summary.overdue;
+  renderCharts(base);
+  currentRows = sortRequests(filterRequests(base, {status:statusFilter}), $('sort').value);
+  $('result-count').textContent = `${currentRows.length} ${currentRows.length === 1 ? 'request' : 'requests'} shown · Status buttons filter this list only`;
+  $('rows').innerHTML = currentRows.map(task => `
+    <tr>
+      <td><span class="id">${escapeHtml(task.id)}</span><button class="title-button" data-id="${escapeHtml(task.id)}">${escapeHtml(task.title)}</button></td>
+      <td data-label="Team / owner">${escapeHtml(task.team)}<br><span class="muted">${escapeHtml(task.owner)}</span></td>
+      <td data-label="Status"><span class="badge ${overdue(task) ? 'overdue' : task.completed ? 'complete' : ''}">${escapeHtml(overdue(task) ? 'Overdue' : task.status)}</span>${overdue(task) ? `<span class="work-status">${escapeHtml(task.status)}</span>` : ''}</td>
+      <td data-label="Due" class="${overdue(task) ? 'late' : ''}">${fmt(task.due)}</td>
+      <td data-label="Priority"><span class="priority">${escapeHtml(task.priority)}</span></td>
+    </tr>`).join('');
+  $('empty').hidden = currentRows.length > 0;
+  $('export').disabled = !currentRows.length;
+  document.querySelectorAll('[data-status]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.status === statusFilter)));
+}
+
+function renderCharts(rows) {
+  const teams = ['People','Service','Facilities'];
+  const counts = teams.map(team => rows.filter(task => task.team === team && !task.completed).length);
+  const max = Math.max(...counts, 1);
+  $('workload').innerHTML = teams.map((team,i) => `<div class="workload-row"><span>${team}</span><div class="track" aria-hidden="true"><span style="width:${counts[i]/max*100}%"></span></div><strong>${counts[i]}</strong></div>`).join('');
+  const weeks = ['2026-10-05','2026-10-12','2026-10-19','2026-10-26','2026-11-02','2026-11-09'];
+  const totals = weeks.map(week => rows.filter(task => task.completed && day(task.completed) >= day(week) && day(task.completed) < day(week)+7*86400000 && day(task.completed) <= day(SNAPSHOT)).length);
+  const peak = Math.max(...totals, 1);
+  $('trend').innerHTML = weeks.map((week,i) => `<div class="week"><b>${totals[i]}</b><span class="bar" aria-hidden="true" style="height:${totals[i]/peak*95}px"></span><span>${fmt(week)}</span></div>`).join('');
+  $('trend-table').querySelector('tbody').innerHTML = weeks.map((week,i) => `<tr><th scope="row">${fmt(week)}${i === weeks.length-1 ? ' (partial)' : ''}</th><td>${totals[i]}</td></tr>`).join('');
+}
+
+function openRequest(button) {
+  const task = TASKS.find(item => item.id === button.dataset.id);
+  if (!task) return;
+  lastTrigger = button;
+  $('detail-body').innerHTML = `
+    <span class="id">${escapeHtml(task.id)} · FICTIONAL REQUEST</span>
+    <h2 id="detail-title">${escapeHtml(task.title)}</h2>
+    <dl><dt>Owner</dt><dd>${escapeHtml(task.owner)}</dd><dt>Team</dt><dd>${escapeHtml(task.team)}</dd>
+    <dt>Work status</dt><dd>${escapeHtml(task.status)}</dd><dt>Due date</dt><dd>${fmt(task.due)}</dd>
+    <dt>Schedule</dt><dd>${scheduleState(task)}</dd><dt>Priority</dt><dd>${escapeHtml(task.priority)}</dd>
+    ${task.completed ? `<dt>Completed</dt><dd>${fmt(task.completed)}</dd>` : ''}</dl>
+    <h3>Where things stand</h3><p>${escapeHtml(task.note)}</p>
+    <h3>Next step</h3><p>${escapeHtml(task.next)}</p>
+    <p class="muted small">This is a read only demo. It does not update a real request or notify anyone.</p>`;
+  $('detail').showModal();
+}
+
+$('filters').addEventListener('submit', event => event.preventDefault());
+$('filters').addEventListener('input', render);
+$('filters').addEventListener('change', render);
+$('filters').addEventListener('reset', () => {
+  statusFilter = 'all';
+  $('sort').value = 'attention';
+  // Native controls receive their default values after the reset event.
+  setTimeout(render, 0);
+});
+$('sort').addEventListener('change', render);
+document.querySelectorAll('[data-status]').forEach(button => button.addEventListener('click', () => {
+  statusFilter = button.dataset.status;
+  render();
+}));
+$('empty-reset').addEventListener('click', () => { $('filters').reset(); $('search').focus(); });
+$('show-overdue').addEventListener('click', () => {
+  statusFilter = 'overdue';
+  render();
+  $('requests').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'});
+  document.querySelector('[data-status="overdue"]').focus({preventScroll:true});
+});
+$('rows').addEventListener('click', event => {
+  const button = event.target.closest('[data-id]');
+  if (button) openRequest(button);
+});
+$('close-detail').addEventListener('click', () => $('detail').close());
+$('detail').addEventListener('close', () => lastTrigger?.focus());
+$('detail').addEventListener('keydown', event => {
+  if (event.key !== 'Tab') return;
+  const controls = [...$('detail').querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')];
+  const first = controls[0], last = controls[controls.length - 1];
+  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+});
+$('export').addEventListener('click', () => {
+  const url = URL.createObjectURL(new Blob([requestsCsv(currentRows)], {type:'text/csv;charset=utf-8'}));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'fictional-operations-requests.csv';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  $('notice').textContent = `Exported ${currentRows.length} fictional requests, including work status and schedule.`;
+});
+render();

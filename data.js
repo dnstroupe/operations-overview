@@ -18,4 +18,37 @@ const day=(value)=>Date.parse(value+'T00:00:00Z');
 const overdue=t=>!t.completed&&day(t.due)<day(SNAPSHOT);
 const daysUntil=t=>Math.round((day(t.due)-day(SNAPSHOT))/86400000);
 function summarize(rows){const open=rows.filter(t=>!t.completed),closed=rows.filter(t=>t.completed);return {open:open.length,overdue:open.filter(overdue).length,due:open.filter(t=>daysUntil(t)>=0&&daysUntil(t)<=7).length,onTime:closed.length?Math.round(100*closed.filter(t=>day(t.completed)<=day(t.due)).length/closed.length):null,closed:closed.length};}
-if(typeof module!=='undefined')module.exports={TASKS,SNAPSHOT,overdue,daysUntil,summarize,day};
+
+// Keep filtering, ordering, and export rules in one place so they can be checked.
+function filterRequests(rows, {team='all', window='all', query='', status='all'}={}) {
+  const term = query.trim().toLowerCase();
+  return rows.filter(t =>
+    (team === 'all' || t.team === team) &&
+    (window === 'all' || (daysUntil(t) >= 0 && daysUntil(t) <= Number(window))) &&
+    (!term || [t.title, t.owner, t.id].some(value => value.toLowerCase().includes(term))) &&
+    (status === 'all' || (status === 'overdue' ? overdue(t) : status === 'complete' ? !!t.completed : !t.completed))
+  );
+}
+function sortRequests(rows, sort='attention') {
+  const priority = {High:0, Medium:1, Low:2};
+  const attention = t => overdue(t) ? 0 : t.completed ? 2 : 1;
+  return [...rows].sort((a,b) =>
+    (sort === 'attention' ? attention(a)-attention(b) : sort === 'priority' ? priority[a.priority]-priority[b.priority] : 0) ||
+    a.due.localeCompare(b.due) || a.id.localeCompare(b.id)
+  );
+}
+function scheduleState(t) {
+  if (t.completed) return day(t.completed) <= day(t.due) ? 'Completed on time' : 'Completed late';
+  return overdue(t) ? 'Overdue' : 'Upcoming';
+}
+function requestsCsv(rows) {
+  const fields = ['id','title','team','owner','status','schedule','priority','due','completed','snapshot'];
+  const cell = value => {
+    let text = String(value ?? '');
+    // Quoting alone does not stop a spreadsheet from interpreting a formula.
+    if (/^[=+@\-\t\r]/.test(text)) text = "'" + text;
+    return '"' + text.replaceAll('"','""') + '"';
+  };
+  return [fields.join(','), ...rows.map(t => fields.map(key => cell(key === 'schedule' ? scheduleState(t) : key === 'snapshot' ? SNAPSHOT : t[key])).join(','))].join('\r\n');
+}
+if (typeof module !== 'undefined') module.exports = {TASKS, SNAPSHOT, overdue, daysUntil, summarize, day, filterRequests, sortRequests, scheduleState, requestsCsv};

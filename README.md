@@ -42,3 +42,13 @@ python3 -m http.server 8000
 Then open http://localhost:8000. Run the calculation checks with `node test-data.cjs`.
 
 Built with Figma, HTML, CSS, JavaScript, and GitHub Pages. There is no backend, sign in, analytics, or connection to a work system.
+
+## What changed after review
+
+The default view now puts unresolved work first. Overdue requests keep their work status, the demo date stays visible on phones, and the export includes schedule context. The case study shows the decisions and a real review iteration, including what remains untested.
+
+* [Read the readiness review](AUDIT.md)
+* [Use the usability session plan](TEST-PLAN.md)
+* [Review accessibility and remaining checks](https://dnstroupe.github.io/operations-overview/accessibility.html)
+
+The Figma file also includes detail and empty states, review notes, and editable metric properties. It is a design study with a working browser counterpart, not a complete enterprise design system.

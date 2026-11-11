@@ -9,3 +9,5 @@ A small useful update each week is enough. I want the history to show how the pr
 5. Add a short walkthrough that explains the decisions, not just the buttons.
 
 Possible later work: saved views, clearer workload context, and a larger synthetic dataset. These are ideas, not features in the current demo.
+
+Use TEST-PLAN.md for the next round. The detailed readiness review is in AUDIT.md. The first priorities are an ownership walkthrough, real task observations, and assistive technology testing. Before sharing the export in a demo, open the downloaded file and verify its rows.
